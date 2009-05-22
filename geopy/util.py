@@ -92,3 +92,10 @@ except NameError:
             yield seq[i]
 else:
     reversed = reversed
+
+class RichResult(tuple):
+    def __new__(cls, *args, **kwargs):
+        obj = tuple.__new__(cls, *args)
+        for name, value in kwargs.items():
+            setattr(obj, name, value)
+        return obj

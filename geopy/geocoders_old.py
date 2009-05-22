@@ -123,7 +123,8 @@ class MediaWiki(WebGeocoder):
         print "Fetching %s..." % url
         page = urlopen(url)
         name, (latitude, longitude) = self.parse_xhtml(page)
-        return (name, (latitude, longitude))        
+        return util.RichResult((name, (latitude, longitude)), name=name,
+                latitude=latitude, longitude=longitude)
 
     def parse_xhtml(self, page):
         soup = isinstance(page, BeautifulSoup) and page or BeautifulSoup(page)
@@ -140,7 +141,8 @@ class MediaWiki(WebGeocoder):
         else:
             latitude = longitude = None
 
-        return (name, (latitude, longitude))
+        return util.RichResult((name, (latitude, longitude)), name=name,
+                latitude=latitude, longitude=longitude)
 
 
 class SemanticMediaWiki(MediaWiki):
@@ -227,7 +229,8 @@ class SemanticMediaWiki(MediaWiki):
                     if None not in (name, latitude, longitude):
                         break
 
-        return (name, (latitude, longitude))
+        return util.RichResult((name, (latitude, longitude)), name=name,
+                latitude=latitude, longitude=longitude)
 
     def parse_rdf_link(self, page, mime_type='application/rdf+xml'):
         """Parse the URL of the RDF link from the <head> of ``page``."""
@@ -374,7 +377,8 @@ class Google(WebGeocoder):
             else:
                 latitude = longitude = None
                 _, (latitude, longitude) = self.geocode(location)
-            return (location, (latitude, longitude))
+            return util.RichResult((location, (latitude, longitude)), location=location,
+                    latitude=latitude, longitude=longitude)
         
         if exactly_one:
             return parse_place(places[0])
@@ -400,7 +404,14 @@ class Google(WebGeocoder):
         def parse_place(place):
             location = place.get('address')
             longitude, latitude = place['Point']['coordinates'][:2]
-            return (location, (latitude, longitude))
+
+            # Add support for pulling out the canonical name
+            locality = place.get('AddressDetails',{}).get('Country',{}).get('AdministrativeArea',{}).get('Locality',{}).get('LocalityName')
+            administrative = place.get('AddressDetails',{}).get('Country',{}).get('AdministrativeArea',{}).get('AdministrativeAreaName')
+
+            return util.RichResult((location, (latitude, longitude)),
+                    location=location, latitude=latitude, longitude=longitude,
+                    locality=locality, administrative=administrative)
         
         if exactly_one:
             return parse_place(places[0])
@@ -427,7 +438,8 @@ class Google(WebGeocoder):
             latitude, longitude, location = marker
             location = re.match(ADDRESS, location).group('address')
             latitude, longitude = float(latitude), float(longitude)
-            return (location, (latitude, longitude))
+            return util.RichResult((location, (latitude, longitude)),
+                    location=location, latitude=latitude, longitude=longitude)
 
         match = re.search(MARKERS, page)
         markers = match and match.group('markers') or ''
@@ -512,7 +524,13 @@ class Yahoo(WebGeocoder):
             latitude = latitude and float(latitude)
             longitude = self._get_first_text(result, 'Longitude') or None
             longitude = longitude and float(longitude)
-            return (location, (latitude, longitude))
+            locality = self._get_first_text(result, 'LocalityName', strip)
+            administrative = self._get_first_text(result, 'AdministrativeAreaName', strip)
+            return util.RichResult((location, (latitude, longitude)),
+                    address=address, city=city, state=state, zip=zip,
+                    country=country, city_state=city_state, place=place,
+                    location=location, latitude=latitude, longitude=longitude,
+                    locality=locality, administrative=administrative)
     
         if exactly_one:
             return parse_result(results[0])
@@ -595,7 +613,9 @@ class GeocoderDotUS(WebGeocoder):
             location = self._join_filter(", ", [address, place]) or None
             latitude = result.get('lat')
             longitude = result.get('long')
-            return (location, (latitude, longitude))
+            return util.RichResult((location, (latitude, longitude)),
+                    address=address, city_state=city_state, place=place,
+                    location=location, latitude=latitude, longitude=longitude)
         
         if exactly_one:
             return parse_result(results[0])
@@ -628,7 +648,8 @@ class GeocoderDotUS(WebGeocoder):
             latitude = latitude and float(latitude)
             longitude = self._get_first_text(point, 'geo:long') or None
             longitude = longitude and float(longitude)
-            return (location, (latitude, longitude))
+            return util.RichResult((location, (latitude, longitude)),
+                    location=location, latitude=latitude, longitude=longitude)
             
         if exactly_one:
             return parse_point(points[0])
@@ -690,7 +711,8 @@ class VirtualEarth(WebGeocoder):
             else:
                 location, latitude, longitude = array[:3]
                 
-            return (location, (latitude, longitude))
+            return util.RichResult((location, (latitude, longitude)),
+                    location=location, latitude=latitude, longitude=longitude)
 
         if exactly_one:
             return parse_match(matches[0])
@@ -766,7 +788,9 @@ class GeoNames(WebGeocoder):
 	    longitude = code.get('lng')
             latitude = latitude and float(latitude)
             longitude = longitude and float(longitude)
-            return (location, (latitude, longitude))
+            return util.RichResult((location, (latitude, longitude)),
+                    location=location, latitude=latitude, longitude=longitude,
+                    place=place)
 
         if exactly_one:
             return parse_code(codes[0],reverse)
@@ -804,7 +828,10 @@ class GeoNames(WebGeocoder):
 	    longitude = self._get_first_text(code, 'lng') or None
 	    latitude = latitude and float(latitude)
 	    longitude = longitude and float(longitude)
-            return (location, (latitude, longitude))
+            return util.RichResult((location, (latitude, longitude)),
+                    location=location, latitude=latitude, longitude=longitude,
+                    place=place, postal_code=postal_code,
+                    country_code=country_code, place_name=place_name)
         
         if exactly_one:
             return parse_code(codes[0],reverse)

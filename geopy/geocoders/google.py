@@ -128,6 +128,7 @@ class Google(Geocoder):
         json = simplejson.loads(page)
         places = json.get('Placemark', [])
 
+
         if (exactly_one and len(places) != 1) and (not reverse):
             raise ValueError("Didn't find exactly one placemark! " \
                              "(Found %d.)" % len(places))
@@ -135,7 +136,12 @@ class Google(Geocoder):
         def parse_place(place):
             location = place.get('address')
             longitude, latitude = place['Point']['coordinates'][:2]
-            return (location, (latitude, longitude))
+
+            # Add support for pulling out the canonical name
+            locality = place.get('AddressDetails',{}).get('Country',{}).get('AdministrativeArea',{}).get('Locality',{}).get('LocalityName')
+            administrative = place.get('AddressDetails',{}).get('Country',{}).get('AdministrativeArea',{}).get('AdministrativeAreaName')
+
+            return util.RichResult((location, (latitude, longitude)), locality=locality, administrative=administrative)
         
         if exactly_one:
             return parse_place(places[0])

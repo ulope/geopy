@@ -320,10 +320,19 @@ class Google(WebGeocoder):
         resource = self.resource.strip('/')
         return "http://%(domain)s/%(resource)s?%%s" % locals()
 
-    def geocode(self, string, exactly_one=True):
+    def geocode(self, string, exactly_one=True, language_code=None, 
+                sensor=False, viewport_center=None, viewport_span=None):
         params = {'q': self.format_string % string,
                   'output': self.output_format.lower(),
+                  'sensor': str(sensor).lower(),
                   }
+        if language_code:
+            params.update({'gl': language_code})
+        if viewport_center and viewport_span:
+            params.update({
+                'll': viewport_center,
+                'spn': viewport_span,
+            })
         if self.resource.rstrip('/').endswith('geo'):
             # An API key is only required for the HTTP geocoder.
             params['key'] = self.api_key

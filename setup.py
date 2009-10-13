@@ -1,12 +1,12 @@
 from setuptools import setup, find_packages
 
 setup(name='geopy',
-      version='0.93',
+      version='0.93-f1',
       description='Python Geocoding Toolbox',
       author='Brian Beck',
       author_email='exogen@gmail.com',
-      url='http://exogen.case.edu/projects/geopy/',
-      download_url='http://geopy.googlecode.com/svn/trunk/',
+      url='http://github.com/ulope/geopy',
+      download_url='git://github.com/ulope/geopy.git',
       packages=find_packages(),
       license='MIT',
       keywords='geocode geocoding gis geographical maps earth distance',

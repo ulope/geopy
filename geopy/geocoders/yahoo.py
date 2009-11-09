@@ -4,6 +4,9 @@ from geopy import Point, Location
 from urllib import urlencode
 from urllib2 import urlopen, HTTPError
 from geopy.geocoders.base import Geocoder
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class Yahoo(Geocoder):
@@ -24,7 +27,7 @@ class Yahoo(Geocoder):
         return self.geocode_url(url)
 
     def geocode_url(self, url):
-        print "Fetching %s..." % url
+        log.debug("Fetching %s..." % url)
         page = urlopen(url)
 
         parse = getattr(self, 'parse_' + self.output_format)

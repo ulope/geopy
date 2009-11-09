@@ -4,6 +4,9 @@ from geopy.geocoders.base import Geocoder
 from geopy.point import Point
 from geopy.location import Location
 from geopy import util
+import logging
+
+log = logging.getLogger(__name__)
 
 try:
     set
@@ -72,12 +75,12 @@ class SemanticMediaWiki(Geocoder):
         if attempted is None:
             attempted = set()
 
-        print "Fetching %s..." % url
+        log.debug("Fetching %s..." % url)
         page = urlopen(url)
         soup = BeautifulSoup(page)
 
         rdf_url = self.parse_rdf_link(soup)
-        print "Fetching %s..." % rdf_url
+        log.debug("Fetching %s..." % rdf_url)
         page = urlopen(rdf_url)
 
         things, thing = self.parse_rdf(page)
